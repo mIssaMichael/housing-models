@@ -15,6 +15,7 @@ library(ggpubr)
 library(MASS)
 library(corrplot)
 library(e1071)
+library(glmnet)
 
 ###########################################################
 
@@ -294,17 +295,20 @@ all_data <- cbind(all_data, dummy_df)
 # Print the shape of all_data after creating dummy variables
 cat('Shape all_data after creating dummy variables:', dim(all_data), '\n')
 
+# Final train and test data
+train <- all_data[1:ntrain, ]
+test <- all_data[(ntrain + 1):nrow(all_data), ]
+
 ###########################################################
 # Model building and testing
 ###########################################################
-
 # Set the number of folds
 n_folds <- 5
 
 # Define the RMSLE function 
 rmsle_cv <- function(model, train_data, response) {
   # Create a train control object for cross-validation
-  ctrl <- trainControl(method = "cv", number = n_folds, shuffle = TRUE, seed = 42)
+  ctrl <- trainControl(method = "cv", number = n_folds, classProbs = TRUE)
   
   # Use the train function from caret for cross-validation
   rmse <- train(x = train_data, y = response,
@@ -316,10 +320,8 @@ rmsle_cv <- function(model, train_data, response) {
   return(sqrt(rmse$results$RMSE))
 }
 
-
-
-
-
-
+# Example usage
+rf_result <- rmsle_cv(model = "rf", train_data = train, response = y_train)
+cat("\nRF RMSE: ", sprintf("%.4f", mean(rf_result)), " (", sprintf("%.4f", sd(rf_result)), ")\n")
 
 
